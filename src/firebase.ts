@@ -4,9 +4,9 @@ import {  enableIndexedDbPersistence } from "firebase/firestore";
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBoGrrpWVMQhsOwZfe8E6Eh3S94SMlG5Z0",
-  authDomain: "twise-ef372.firebaseapp.com",
-  projectId: "twise-ef372",
-  storageBucket: "twise-ef372.appspot.com",
+  authDomain: "innov8ers-twise.firebaseapp.com",
+  projectId: "innov8ers-twise",
+  storageBucket: "innov8ers-twise.appspot.com",
   messagingSenderId: "620600015630",
   appId: "1:620600015630:web:e3fe1084859924c991355f"
 };

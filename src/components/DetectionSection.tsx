@@ -12,11 +12,13 @@ const DetectionSection = () => {
     };
 
     const handleDetect = () => {
-        if (selectedFile) {
-            // Simulate a model prediction (replace this with actual model logic)
-            setPrediction("Predicted result: Example Output");
-        }
-    };
+      if (selectedFile) {
+          // Simulate a model prediction (replace this with actual model logic)
+          setPrediction("Predicted result: Example Output");
+      }
+      // Redirect to the Hugging Face model page
+      window.location.href = 'https://huggingface.co/spaces/mounibnasr/simple_cnn_rabbitfish2';
+  };
 
     return (
         <div id="detection" style={{ height:'100vh' }} >
@@ -35,15 +37,12 @@ const DetectionSection = () => {
                         <div className="back-side cover" />
                     </div>
                     <label className="custom-file-upload">
-                        <input className="title" type="file" onChange={handleFileChange} />
+                        <input className="title" type='button' onClick={handleDetect} />
                         Choose a file
                     </label>
                 </div>
             </StyledWrapper>
-            <RightPanel>
-                {prediction && <PredictionText>{prediction}</PredictionText>}
-                <DetectButton onClick={handleDetect}>Detect</DetectButton>
-            </RightPanel>
+            
         </Container>
         </div>
     );
