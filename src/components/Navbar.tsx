@@ -4,21 +4,28 @@ import { Link } from "react-router-dom";
 import logo from '../assets/logotwise.png'
 const MenuItems = [
     {
-        title: "À propos du poisson-lapin",
+        title: "À propos",
         url: "/#about",  
         cName: "nav-links",
         icon: "",
         isAnchor: true 
     },
     {
-        title: "Identifier un poisson-lapin",
+        title: "Identifier ",
         url: "/#detection",  
         cName: "nav-links",
         icon: "fa-solid fa-question",
         isAnchor: true
     },
     {
-        title: "Signaler une apparition",
+        title: "Decouvrir ",
+        url: "/#decouvrir",  
+        cName: "nav-links",
+        icon: "fa-solid fa-question",
+        isAnchor: true
+    },
+    {
+        title: "Signaler",
         url: "/report",  
         cName: "nav-links",
         icon: "fas fa-info-circle",
