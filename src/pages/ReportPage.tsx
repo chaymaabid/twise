@@ -2,16 +2,18 @@ import React, { useState, useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import supabase from "../supabaseClient";
+import imageCompression from "browser-image-compression"; // Import the library
 
-// Remove unused interface
-// interface Sighting {
-//   id: string;
-//   latitude: number;
-//   longitude: number;
-//   date: string;
-//   wayOfRecord: string;
-//   picture?: string;
-// }
+// Define the custom icon using CDN URLs
+const customIcon = L.icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 const ReportPage: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -33,7 +35,8 @@ const ReportPage: React.FC = () => {
       if (marker) {
         map.removeLayer(marker);
       }
-      marker = L.marker([lat, lng]).addTo(map);
+      // Use the custom icon for the marker
+      marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
       setLocation(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
     });
 
@@ -42,15 +45,31 @@ const ReportPage: React.FC = () => {
     };
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result as string);
+
+      // Compress the image
+      const options = {
+        maxSizeMB: 5, // Maximum size in MB
+        maxWidthOrHeight: 1024, // Maximum width or height
+        useWebWorker: true, // Use a web worker for better performance
       };
-      reader.readAsDataURL(file);
+
+      try {
+        const compressedFile = await imageCompression(file, options);
+        setSelectedFile(compressedFile);
+
+        // Generate a preview of the compressed image
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImagePreview(event.target?.result as string);
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error("Error compressing image:", error);
+        alert("Failed to compress the image. Please try again.");
+      }
     }
   };
 
@@ -60,11 +79,11 @@ const ReportPage: React.FC = () => {
       alert("Please select a location on the map.");
       return;
     }
-  
+
     setIsLoading(true);
     try {
       let imageUrl = "";
-  
+
       if (selectedFile) {
         const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
         const maxSize = 5 * 1024 * 1024; // 5MB
@@ -76,39 +95,39 @@ const ReportPage: React.FC = () => {
         if (selectedFile.size > maxSize) {
           throw new Error("File size must be less than 5MB.");
         }
-  
+
         const fileName = `${Date.now()}_${selectedFile.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
         
-        const { data, error } = await supabase.storage
+        const { data: _, error } = await supabase.storage
           .from("reports")
           .upload(fileName, selectedFile);
-  
+
         if (error) {
           throw error;
         }
-  
+
         imageUrl = `https://relhbyrygwpjseeknvzy.supabase.co/storage/v1/object/public/reports/${fileName}`;
       }
-  
+
       // Use correct column names in the database query
       const sightingData = {
         date,
-        way_of_record: recordType, // Changed from wayOfRecord
+        way_of_record: recordType,
         location,
         picture: imageUrl,
       };
-  
+
       console.log("Attempting to insert:", sightingData);
-  
+
       const { error } = await supabase
         .from("fish_reports")
         .insert([sightingData]);
-  
+
       if (error) {
         console.error("Database error:", error);
         throw error;
       }
-  
+
       alert("Sighting submitted successfully!");
       setDate(new Date().toISOString().split("T")[0]);
       setLocation("");
@@ -126,33 +145,8 @@ const ReportPage: React.FC = () => {
     }
   };
 
-  const validateSightingData = (data: any): string[] => {
-    const errors: string[] = [];
-    
-    // Check required fields
-    if (!data.date) {
-      errors.push("Date is required");
-    }
-    
-    if (!data.way_of_record) {
-      errors.push("Way of record is required");
-    }
-    
-    if (!data.location) {
-      errors.push("Location is required");
-    }
-    
-    // Validate way_of_record values
-    if (data.way_of_record && 
-        !['fisherman', 'citizen', 'ngo'].includes(data.way_of_record)) {
-      errors.push("Invalid way of record");
-    }
-    
-    return errors;
-  };
-
   return (
-    <div style={{ padding: "20px", marginTop:"120px"}}>
+    <div style={{ padding: "20px", marginTop: "120px" }}>
       <h1>Report a Sighting</h1>
       <div id="map" style={{ height: "400px", borderRadius: "10px", border: "2px solid #ccc", marginBottom: "20px" }}></div>
       <form onSubmit={handleSubmit} style={{ maxWidth: "400px", margin: "0 auto" }}>
